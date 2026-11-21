@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartCity CAD 2D — Interactive Miniature Map Editor (160cm x 120cm)</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+  <!-- Top Application Navigation Bar -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <path d="M3 9h18M9 21V9M15 9v12"/>
+          <circle cx="15" cy="15" r="2" fill="#10b981"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-title">SmartCity CAD 2D</span>
+        <span class="brand-subtitle">160cm × 120cm Physical Scale Board</span>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" data-tab="tab-editor" id="btn-tab-editor">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2">
+          <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+          <line x1="8" y1="2" x2="8" y2="18"></line>
+          <line x1="16" y1="6" x2="16" y2="22"></line>
+        </svg>
+        <span>Map Editor</span>
+        <span class="badge active-badge">Active</span>
+      </button>
+
+      <button class="tab-btn" data-tab="tab-project" id="btn-tab-project">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2">
+          <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+          <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+          <line x1="6" y1="6" x2="6.01" y2="6"></line>
+          <line x1="6" y1="18" x2="6.01" y2="18"></line>
+        </svg>
+        <span>Project Info &amp; Live Monitor</span>
+        <span class="badge future-badge">IoT / A*</span>
+      </button>
+
+      <button class="tab-btn" data-tab="tab-ai-sim" id="btn-tab-ai-sim">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 6v6l4 2"></path>
+        </svg>
+        <span>AI Traffic Simulator</span>
+        <span class="badge active-badge" style="background:#10b981;">YOLO11 MVP</span>
+      </button>
+    </nav>
+
+    <!-- Top Action Controls -->
+    <div class="header-actions">
+      <!-- Reference Photo Alignment Toggle -->
+      <div class="ref-photo-toggle" title="Toggle reference photo overlay of the physical miniature table">
+        <label for="ref-photo-slider" class="toggle-label">Ref Photo:</label>
+        <input type="range" id="ref-photo-slider" min="0" max="100" value="0" class="slider-sm" title="Reference Image Opacity">
+        <span id="ref-photo-val" class="mono-label">0%</span>
+      </div>
+
+      <div class="btn-group">
+        <button id="btn-undo" class="btn btn-secondary icon-btn" title="Undo (Ctrl+Z)" disabled>
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/></svg>
+        </button>
+        <button id="btn-redo" class="btn btn-secondary icon-btn" title="Redo (Ctrl+Y)" disabled>
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7"/></svg>
+        </button>
+      </div>
+
+      <div class="btn-group">
+        <button id="btn-export-json" class="btn btn-secondary" title="Export Map to JSON for Raspberry Pi / Routing">
+          <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export JSON
+        </button>
+        <label class="btn btn-secondary btn-file-label" title="Import Map from JSON file">
+          <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Import JSON
+          <input type="file" id="file-import-json" accept=".json" style="display: none;">
+        </label>
+        <button id="btn-export-png" class="btn btn-secondary" title="Download High-Resolution PNG">
+          <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Export PNG
+        </button>
+        <button id="btn-reset-map" class="btn btn-danger-ghost" title="Reset to Default Reference Layout">
+          <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><path d="M2.5 2v6h6M21.5 22v-6h-6"/><path d="M22 11.5A10 10 0 0 0 3.2 7.2L2.5 8M2 12.5a10 10 0 0 0 18.8 4.3l.7-.8"/></svg>
+          Reset Default
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View Container -->
+  <main class="main-container">
+
+    <!-- TAB 1: 2D MAP EDITOR -->
+    <div id="tab-editor" class="tab-pane active">
+      
+      <!-- Primary Tool Bar -->
+      <aside class="editor-toolbar">
+        <div class="tool-section">
+          <span class="tool-section-label">Tools</span>
+
+          <button class="tool-btn active" data-tool="select" id="tool-select" title="Select & Move (V)">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+              <path d="M3 3l7 18 3-7 7-3L3 3z"/>
+            </svg>
+            <span class="tool-name">Select</span>
+            <span class="tool-key">V</span>
+          </button>
+
+          <button class="tool-btn" data-tool="road" id="tool-road" title="Add Road Segment (R)">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+              <path d="M4 19L8 5M16 5l4 14M10 7h4M10 12h4M10 17h4"/>
+            </svg>
+            <span class="tool-name">Road</span>
+            <span class="tool-key">R</span>
+          </button>
+
+          <button class="tool-btn" data-tool="traffic_light" id="tool-traffic-light" title="Place Traffic Light / Sensor (T)">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+              <rect x="7" y="2" width="10" height="18" rx="3"/>
+              <circle cx="12" cy="6" r="1.5" fill="#ef4444"/>
+              <circle cx="12" cy="11" r="1.5" fill="#f59e0b"/>
+              <circle cx="12" cy="16" r="1.5" fill="#10b981"/>
+              <line x1="12" y1="20" x2="12" y2="23"/>
+            </svg>
+            <span class="tool-name">Signals</span>
+            <span class="tool-key">T</span>
+          </button>
+
+          <button class="tool-btn" data-tool="zone" id="tool-zone" title="Add Zone Block (Z)">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="4 2"/>
+              <path d="M9 3v18M3 9h18"/>
+            </svg>
+            <span class="tool-name">Zone</span>
+            <span class="tool-key">Z</span>
+          </button>
+
+          <button class="tool-btn" data-tool="pan" id="tool-pan" title="Pan Canvas (H or Space+Drag)">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+              <path d="M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8c0 4.4 3.6 8 8 8s8-3.6 8-8v-3a2 2 0 0 0-4 0v0"/>
+            </svg>
+            <span class="tool-name">Pan</span>
+            <span class="tool-key">H</span>
+          </button>
+
+          <button class="tool-btn text-danger" data-tool="delete" id="tool-delete" title="Delete Element (Del)">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+            <span class="tool-name">Delete</span>
+            <span class="tool-key">Del</span>
+          </button>
+        </div>
+
+        <div class="tool-divider"></div>
+
+        <!-- Tool Configuration Sub-bar -->
+        <div class="tool-section" id="tool-options-container">
+          <span class="tool-section-label">Tool Options</span>
+
+          <!-- Active Road Options -->
+          <div class="tool-options" id="opt-road-panel" style="display: none;">
+            <div class="option-field">
+              <label>Width:</label>
+              <div class="pill-group">
+                <button class="pill-btn active" data-road-width="20" title="Main Avenue: 20cm dual-way">20cm Ave</button>
+                <button class="pill-btn" data-road-width="14" title="Secondary / Bypass: 14cm">14cm Byp</button>
+              </div>
+            </div>
+            <div class="option-field">
+              <label>Flow:</label>
+              <select id="sel-new-road-flow" class="cad-select">
+                <option value="two-way">Two-Way (Opposing)</option>
+                <option value="one-way-forward">One-Way (Forward)</option>
+                <option value="one-way-reverse">One-Way (Reverse)</option>
+                <option value="roundabout">Roundabout (Rotary)</option>
+              </select>
+            </div>
+            <div class="option-field">
+              <label><input type="checkbox" id="chk-road-curved"> Curved Road</label>
+            </div>
+          </div>
+
+          <!-- Active Traffic Light Options -->
+          <div class="tool-options" id="opt-traffic-panel" style="display: none;">
+            <div class="option-field">
+              <label>Type:</label>
+              <select id="sel-new-signal-type" class="cad-select">
+                <option value="overhead_gantry">Overhead Gantry + ESP32</option>
+                <option value="standard_pole">Standard 3-LED Pole</option>
+                <option value="smart_sensor">Smart Sensor (IR/US)</option>
+              </select>
+            </div>
+            <div class="option-field">
+              <label>Orientation:</label>
+              <div class="pill-group">
+                <button class="pill-btn active" data-rot="0">0°</button>
+                <button class="pill-btn" data-rot="90">90°</button>
+                <button class="pill-btn" data-rot="180">180°</button>
+                <button class="pill-btn" data-rot="270">270°</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Zone Options -->
+          <div class="tool-options" id="opt-zone-panel" style="display: none;">
+            <div class="option-field">
+              <label>Category:</label>
+              <select id="sel-new-zone-category" class="cad-select">
+                <option value="hospital">Hospital &amp; Emergency</option>
+                <option value="park">Central Park</option>
+                <option value="commercial">Commercial District</option>
+                <option value="residential">Residential Area</option>
+                <option value="tech_hub">Tech Hub &amp; R&amp;D</option>
+                <option value="control_hub">Control Hub (RPi)</option>
+                <option value="custom">Custom Building</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="tool-divider"></div>
+
+        <!-- Quick View Controls -->
+        <div class="tool-section">
+          <span class="tool-section-label">Canvas View</span>
+          <button id="btn-zoom-in" class="view-btn" title="Zoom In (+)">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            <span>In</span>
+          </button>
+          <button id="btn-zoom-out" class="view-btn" title="Zoom Out (-)">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            <span>Out</span>
+          </button>
+          <button id="btn-reset-view" class="view-btn" title="Fit Board (160x120 cm) in View">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+            <span>Fit 160×120</span>
+          </button>
+        </div>
+
+      </aside>
+
+      <!-- Center Work Area / Canvas Container -->
+      <div class="canvas-viewport" id="canvas-viewport">
+        <!-- Floating Canvas HUD overlay -->
+        <div class="canvas-hud">
+          <!-- Snap & Grid Options -->
+          <div class="hud-item">
+            <label class="hud-check">
+              <input type="checkbox" id="chk-snap-grid" checked>
+              <span>Snap Grid</span>
+            </label>
+            <select id="sel-grid-step" class="cad-select-xs" title="Grid Snapping Step in cm">
+              <option value="1">1 cm</option>
+              <option value="2">2 cm</option>
+              <option value="5" selected>5 cm</option>
+              <option value="10">10 cm</option>
+            </select>
+          </div>
+
+          <!-- Display Mode Toggles -->
+          <div class="hud-item">
+            <label class="hud-check" title="Toggle road flow direction arrows">
+              <input type="checkbox" id="chk-show-arrows" checked>
+              <span>Flow Arrows</span>
+            </label>
+            <label class="hud-check" title="Toggle traffic light IDs and status badge">
+              <input type="checkbox" id="chk-show-labels" checked>
+              <span>Labels</span>
+            </label>
+            <label class="hud-check" title="Show node junction pins">
+              <input type="checkbox" id="chk-show-nodes" checked>
+              <span>Nodes</span>
+            </label>
+          </div>
+
+          <!-- Zoom Percentage Display -->
+          <div class="hud-item">
+            <span class="hud-badge" id="hud-zoom-level">100%</span>
+          </div>
+
+          <!-- Live Signals Simulation Toggle -->
+          <div class="hud-item">
+            <button id="btn-toggle-sim" class="btn btn-secondary btn-sm" title="Toggle Live Traffic Signal Cycling & IoT Telemetry">
+              <span id="sim-icon">▶</span>
+              <span id="sim-text">Live Sim</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tool Guide Toast -->
+        <div class="tool-guide-toast" id="tool-guide-toast">
+          <span class="guide-icon">💡</span>
+          <span class="guide-msg">Select Mode: Click roads, zones, or signals to inspect and drag.</span>
+        </div>
+
+        <!-- 2D HTML5 Canvas -->
+        <canvas id="city-canvas"></canvas>
+      </div>
+
+      <!-- Right-Hand Inspector & Properties Panel -->
+      <aside class="editor-inspector" id="editor-inspector">
+        <div class="inspector-header">
+          <div class="inspector-title">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>Inspector Panel</span>
+          </div>
+          <span class="inspector-badge" id="inspector-type-badge">Map Details</span>
+        </div>
+
+        <div class="inspector-body" id="inspector-content">
+          <!-- Dynamic Form Populated by app.js based on selection -->
+        </div>
+
+        <!-- Quick element actions footer -->
+        <div class="inspector-footer" id="inspector-actions" style="display: none;">
+          <button id="btn-duplicate-elem" class="btn btn-secondary btn-sm" title="Duplicate element">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Duplicate
+          </button>
+          <button id="btn-delete-elem" class="btn btn-danger btn-sm" title="Delete selected element">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Delete
+          </button>
+        </div>
+      </aside>
+
+    </div>
+
+    <!-- TAB 2: PROJECT INFO & LIVE MONITOR -->
+    <div id="tab-project" class="tab-pane" style="display: none;">
+      <div class="project-container">
+        
+        <!-- Header Banner -->
+        <div class="project-banner">
+          <div class="banner-badge">MINIATURE SMART CITY ARCHITECTURE</div>
+          <h1>Physical 160cm × 120cm Hardware &amp; IoT Testbed</h1>
+          <p class="banner-desc">
+            Physical layout specification matching the testbed setup: Master Raspberry Pi 4 Controller, ESP32-CAM optical edge nodes, multi-phase traffic signals, and intelligent Dijkstra/A* dynamic routing.
+          </p>
+        </div>
+
+        <!-- Three-Column Architecture Cards -->
+        <div class="cards-grid">
+          <!-- Card 1: Physical Reference & Table Specs -->
+          <div class="cad-card">
+            <div class="card-header">
+              <div class="card-icon blue">📐</div>
+              <div class="card-title-group">
+                <h3>Physical Table Dimensions</h3>
+                <span class="card-subtitle">Scale &amp; Specifications</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="reference-photo-preview">
+                <img src="assets/reference-layout.jpg" alt="160x120cm Miniature City Table Reference" class="ref-img">
+                <div class="photo-caption">Physical Reference: 160cm × 120cm Table with Raspberry Pi mount</div>
+              </div>
+              <ul class="spec-list">
+                <li><span class="spec-k">Dimensions:</span> <span class="spec-v">160.0 cm × 120.0 cm</span></li>
+                <li><span class="spec-k">CAD Grid Ratio:</span> <span class="spec-v">1 cm = 5 px (800×600 base)</span></li>
+                <li><span class="spec-k">Main Avenue:</span> <span class="spec-v">20 cm (Dual-Way, 2-lane)</span></li>
+                <li><span class="spec-k">Secondary Roads:</span> <span class="spec-v">14 cm (Perimeter &amp; Bypass)</span></li>
+                <li><span class="spec-k">Central Roundabout:</span> <span class="spec-v">28 cm outer diameter</span></li>
+                <li><span class="spec-k">Control Hub:</span> <span class="spec-v">Bottom-Right acrylic bracket</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Card 2: IoT & Hardware Integration -->
+          <div class="cad-card">
+            <div class="card-header">
+              <div class="card-icon emerald">⚡</div>
+              <div class="card-title-group">
+                <h3>Hardware &amp; IoT Stack</h3>
+                <span class="card-subtitle">Raspberry Pi + ESP32-CAMs</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="iot-stack-box">
+                <div class="iot-row">
+                  <span class="iot-badge rpi">Raspberry Pi 4B</span>
+                  <span class="iot-detail">Central MQTT Broker (`mosquitto`), Master Graph Engine</span>
+                </div>
+                <div class="iot-row">
+                  <span class="iot-badge esp">ESP32-CAM Nodes</span>
+                  <span class="iot-detail">Overhead Gantry vision, vehicle detection &amp; lane density</span>
+                </div>
+                <div class="iot-row">
+                  <span class="iot-badge sensors">IR &amp; Ultrasonic</span>
+                  <span class="iot-detail">TCRT5000 / HC-SR04 for junction queue monitoring</span>
+                </div>
+                <div class="iot-row">
+                  <span class="iot-badge signal">LED Modules</span>
+                  <span class="iot-detail">74HC595 shift registers driving 3-color signal poles</span>
+                </div>
+              </div>
+
+              <div class="mqtt-preview-box">
+                <div class="mqtt-title">Simulated MQTT Topic Structure:</div>
+                <pre class="mqtt-code"><code>smartcity/control/hub/status
+smartcity/intersection/TL_MAIN_J2/state   {"state":"GREEN","remaining":12}
+smartcity/camera/ESP32_N1/vehicles        {"count":4,"congested":false}
+smartcity/emergency/route/override       {"route":["N_AVE_W","N_RND_S"]}</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Live Routing Simulator -->
+          <div class="cad-card">
+            <div class="card-header">
+              <div class="card-icon purple">🧭</div>
+              <div class="card-title-group">
+                <h3>Dijkstra / A* Best-Route Simulator</h3>
+                <span class="card-subtitle">Graph-based Route Optimization</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <p class="card-desc">
+                Test the graph solver using the current road network and one-way/two-way constraints.
+              </p>
+              
+              <div class="route-test-form">
+                <div class="form-row">
+                  <label for="route-start-zone">Start Location:</label>
+                  <select id="route-start-zone" class="cad-select">
+                    <option value="ZONE_RESIDENTIAL_W">Residential Area (West)</option>
+                    <option value="ZONE_COMMERCIAL_W">Commercial District (West)</option>
+                    <option value="ZONE_TECH_HUB">Tech Hub (North)</option>
+                    <option value="ZONE_CONTROL_HUB">Control Hub (RPi)</option>
+                  </select>
+                </div>
+
+                <div class="form-row">
+                  <label for="route-end-zone">Destination:</label>
+                  <select id="route-end-zone" class="cad-select">
+                    <option value="ZONE_HOSPITAL" selected>Hospital &amp; Trauma Center</option>
+                    <option value="ZONE_PARK">Central Park</option>
+                    <option value="ZONE_COMMERCIAL_E">Commercial District (East)</option>
+                    <option value="ZONE_RESIDENTIAL_E">Residential Area (East)</option>
+                  </select>
+                </div>
+
+                <button id="btn-calc-route" class="btn btn-primary btn-full">
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  Simulate Shortest Emergency Route
+                </button>
+
+                <div id="route-result-box" class="route-result-box" style="display: none;">
+                  <div class="route-stat">
+                    <span class="route-label">Calculated Path:</span>
+                    <span id="route-path-text" class="route-val mono">N_AVE_W &rarr; N_AVE_J2 &rarr; N_RND_S &rarr; N_RND_E</span>
+                  </div>
+                  <div class="route-stat">
+                    <span class="route-label">Total Distance:</span>
+                    <span id="route-dist-text" class="route-val mono">84.2 cm</span>
+                  </div>
+                  <div class="route-stat">
+                    <span class="route-label">Estimated Transit:</span>
+                    <span id="route-time-text" class="route-val mono">4.2 sec @ 20cm/s</span>
+                  </div>
+                  <button id="btn-show-route-map" class="btn btn-secondary btn-sm btn-full mt-2">
+                    Highlight on 2D Canvas &rarr;
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- System Architecture Flowchart / Diagram -->
+        <div class="cad-card full-width mt-4">
+          <div class="card-header">
+            <div class="card-icon amber">🔄</div>
+            <div class="card-title-group">
+              <h3>System Dataflow &amp; Hardware Bridge</h3>
+              <span class="card-subtitle">End-to-end integration between Physical Table, Edge Microcontrollers, and this Web CAD</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="flow-diagram">
+              <div class="flow-step">
+                <div class="flow-node">
+                  <div class="flow-title">160×120 Table Sensors</div>
+                  <div class="flow-desc">TCRT5000 IR &amp; ESP32-CAMs detect vehicle presence at junctions</div>
+                </div>
+              </div>
+              <div class="flow-arrow">&rarr;</div>
+              <div class="flow-step">
+                <div class="flow-node highlight-pi">
+                  <div class="flow-title">Raspberry Pi 4 Master</div>
+                  <div class="flow-desc">Runs Python MQTT Broker + Dijkstra Road Graph Solver</div>
+                </div>
+              </div>
+              <div class="flow-arrow">&rarr;</div>
+              <div class="flow-step">
+                <div class="flow-node highlight-web">
+                  <div class="flow-title">WebCAD 2D Engine</div>
+                  <div class="flow-desc">Direct JSON import/export, bidirectional telemetry &amp; map editing</div>
+                </div>
+              </div>
+              <div class="flow-arrow">&rarr;</div>
+              <div class="flow-step">
+                <div class="flow-node">
+                  <div class="flow-title">Physical Signal Output</div>
+                  <div class="flow-desc">Shift registers switch 3-color LEDs &amp; gantries dynamically</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 3: AI ADAPTIVE INTERSECTION SIMULATOR (+ SHAPE) -->
+    <div id="tab-ai-sim" class="tab-pane" style="display: none;">
+      <div class="ai-sim-wrapper">
+        
+        <!-- Simulation Control Bar -->
+        <div class="sim-control-bar">
+          <div class="sim-control-left">
+            <button id="btn-sim-play" class="btn btn-primary">
+              <span class="icon">▶</span> Start Sim
+            </button>
+            <button id="btn-sim-reset" class="btn btn-secondary">
+              <span class="icon">↺</span> Reset
+            </button>
+            
+            <div class="ctrl-group">
+              <label for="sim-speed-select">Speed:</label>
+              <select id="sim-speed-select" class="cad-select-sm">
+                <option value="1">1x Normal</option>
+                <option value="2">2x Fast</option>
+                <option value="5">5x Turbo</option>
+              </select>
+            </div>
+
+            <div class="ctrl-group">
+              <label for="sim-dispatch-mode">Algorithm:</label>
+              <select id="sim-dispatch-mode" class="cad-select-sm">
+                <option value="priority">Congestion Priority (Adaptive)</option>
+                <option value="sequential">Round-Robin Sequential</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Presets -->
+          <div class="sim-control-right">
+            <span class="preset-label">Test Presets:</span>
+            <button class="btn btn-secondary-sm sim-preset-btn" data-preset="heavy-north">🔴 North Jam (12)</button>
+            <button class="btn btn-secondary-sm sim-preset-btn" data-preset="rush-avenue">🟡 Avenue Rush (East/West)</button>
+            <button class="btn btn-secondary-sm sim-preset-btn" data-preset="empty-night">⚪ Empty Night (0)</button>
+            <button class="btn btn-secondary-sm sim-preset-btn" data-preset="balanced">🟢 Balanced (3)</button>
+          </div>
+        </div>
+
+        <!-- 4-Way Cross Grid Layout -->
+        <div class="intersection-stage-layout">
+          
+          <!-- Top: North Approach -->
+          <div class="approach-wrapper north-pos">
+            <div class="approach-card" id="card-north">
+              <div class="app-card-header">
+                <span class="app-title">⬆️ North Corridor</span>
+                <span class="signal-pill pill-green" id="pill-north">GREEN</span>
+              </div>
+              <div class="app-card-body">
+                <div class="dropzone" id="dropzone-north" title="Click or Drag & Drop image here">
+                  <img id="preview-north" class="preview-img" src="assets/samples/sample_low_1.jpg" alt="North Approach">
+                  <div class="drop-overlay">
+                    <span>📷 Change Image</span>
+                  </div>
+                </div>
+                <input type="file" id="file-north" accept="image/*" style="display: none;">
+                <div class="app-stats">
+                  <span class="stat-badge count-badge" id="count-north">9 Vehicles</span>
+                  <span class="stat-badge alloc-badge" id="alloc-north">32.0s (+17.0s)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Center Horizontal Row: West - Canvas - East -->
+          <div class="horizontal-mid-row">
+            
+            <!-- Left: West Approach -->
+            <div class="approach-wrapper west-pos">
+              <div class="approach-card" id="card-west">
+                <div class="app-card-header">
+                  <span class="app-title">⬅️ Grand Ave West</span>
+                  <span class="signal-pill pill-red" id="pill-west">RED</span>
+                </div>
+                <div class="app-card-body">
+                  <div class="dropzone" id="dropzone-west" title="Click or Drag & Drop image here">
+                    <img id="preview-west" class="preview-img" src="assets/samples/sample_medium_2.jpg" alt="West Approach">
+                    <div class="drop-overlay">
+                      <span>📷 Change Image</span>
+                    </div>
+                  </div>
+                  <input type="file" id="file-west" accept="image/*" style="display: none;">
+                  <div class="app-stats">
+                    <span class="stat-badge count-badge" id="count-west">6 Vehicles</span>
+                    <span class="stat-badge alloc-badge" id="alloc-west">24.0s (+9.0s)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Center Intersection Canvas & Live HUD -->
+            <div class="center-canvas-wrapper">
+              <canvas id="intersection-canvas" width="380" height="380"></canvas>
+              
+              <!-- Live HUD Card Below Canvas -->
+              <div class="active-hud-card">
+                <div class="hud-line">
+                  <span class="hud-label">Active Phase:</span>
+                  <span class="hud-val" id="active-app-name">North Approach (Central Corridor)</span>
+                </div>
+                <div class="hud-countdown-wrap">
+                  <span class="hud-countdown" id="active-countdown">32.0s</span>
+                  <div class="hud-progress-bg">
+                    <div class="hud-progress-bar" id="active-progress-bar" style="width: 100%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: East Approach -->
+            <div class="approach-wrapper east-pos">
+              <div class="approach-card" id="card-east">
+                <div class="app-card-header">
+                  <span class="app-title">➡️ Grand Ave East</span>
+                  <span class="signal-pill pill-red" id="pill-east">RED</span>
+                </div>
+                <div class="app-card-body">
+                  <div class="dropzone" id="dropzone-east" title="Click or Drag & Drop image here">
+                    <img id="preview-east" class="preview-img" src="assets/samples/sample_empty_0.jpg" alt="East Approach">
+                    <div class="drop-overlay">
+                      <span>📷 Change Image</span>
+                    </div>
+                  </div>
+                  <input type="file" id="file-east" accept="image/*" style="display: none;">
+                  <div class="app-stats">
+                    <span class="stat-badge count-badge" id="count-east">0 Vehicles</span>
+                    <span class="stat-badge alloc-badge" id="alloc-east">5.0s (-10.0s)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom: South Approach -->
+          <div class="approach-wrapper south-pos">
+            <div class="approach-card" id="card-south">
+              <div class="app-card-header">
+                <span class="app-title">⬇️ South Corridor</span>
+                <span class="signal-pill pill-red" id="pill-south">RED</span>
+              </div>
+              <div class="app-card-body">
+                <div class="dropzone" id="dropzone-south" title="Click or Drag & Drop image here">
+                  <img id="preview-south" class="preview-img" src="assets/samples/sample_heavy_5.jpg" alt="South Approach">
+                  <div class="drop-overlay">
+                    <span>📷 Change Image</span>
+                  </div>
+                </div>
+                <input type="file" id="file-south" accept="image/*" style="display: none;">
+                <div class="app-stats">
+                  <span class="stat-badge count-badge" id="count-south">1 Vehicles</span>
+                  <span class="stat-badge alloc-badge" id="alloc-south">8.0s (-7.0s)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Bottom AI Intelligence & Decision Console -->
+        <div class="ai-analytics-panel">
+          <div class="decision-card">
+            <div class="dec-header">
+              <span class="dec-badge">🧠 AI Adaptive Controller</span>
+              <span class="time-saved-badge" id="ai-time-saved">Time Saved: ~10.0s by cutting empty queues</span>
+            </div>
+            <h4 id="ai-decision-title">Active: North Approach [GREEN]</h4>
+            <div id="ai-decision-desc" class="dec-desc">
+              ⚠️ <strong>Heavy Congestion:</strong> Assigned <strong>32.0s</strong> (+17.0s bonus) to flush vehicle queue.
+            </div>
+          </div>
+
+          <!-- Logs -->
+          <div class="logs-card">
+            <div class="logs-header">📋 Simulation Events &amp; Logic Log</div>
+            <div class="logs-container" id="sim-logs-container">
+              <!-- Log lines appear here -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Bottom Real-time Coordinate & Status Bar -->
+  <footer class="cad-statusbar">
+    <div class="status-left">
+      <div class="status-item">
+        <span class="status-dot online"></span>
+        <span class="status-text" id="status-engine">Ready</span>
+      </div>
+      <div class="status-item">
+        <span class="status-key">Cursor:</span>
+        <span class="status-val mono" id="status-coords">X: 0.0 cm, Y: 0.0 cm</span>
+      </div>
+      <div class="status-item">
+        <span class="status-key">Board:</span>
+        <span class="status-val mono">160.0 × 120.0 cm</span>
+      </div>
+      <div class="status-item">
+        <span class="status-key">Scale:</span>
+        <span class="status-val mono" id="status-scale">1cm = 5.0px</span>
+      </div>
+    </div>
+
+    <div class="status-right">
+      <div class="status-item">
+        <span class="status-key">Roads:</span>
+        <span class="status-val mono" id="status-road-count">0</span>
+      </div>
+      <div class="status-item">
+        <span class="status-key">Nodes:</span>
+        <span class="status-val mono" id="status-node-count">0</span>
+      </div>
+      <div class="status-item">
+        <span class="status-key">Signals:</span>
+        <span class="status-val mono" id="status-signal-count">0</span>
+      </div>
+      <div class="status-item">
+        <span class="status-key">Zones:</span>
+        <span class="status-val mono" id="status-zone-count">0</span>
+      </div>
+      <div class="status-item" id="status-autosave">
+        <span class="autosave-tag">● Auto-Saved</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts: Modular Architecture -->
+  <script src="js/state.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/tools.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/ai_simulator.js"></script>
+</body>
+</html>
